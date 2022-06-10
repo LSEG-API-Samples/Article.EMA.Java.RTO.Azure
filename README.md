@@ -36,7 +36,7 @@ The Spring creates a server, defines the service endpoints and manages the multi
 #### Initialize the web service and market data connection
 In this code in the [MarketData controller](https://github.com/Refinitiv-API-Samples/Article.RTSDK.Java.MDWebService/blob/main/MDWebService/src/main/java/com/refinitiv/MDWebService/MDController.java), we attach the *@EventListener* annotation which tells spring to invoke this method, when the web subsystem is ready. We in turn invoke the *initialize()* method on the pricing data consumer. This pricing data consumer is the [OMM Consumer](https://github.com/Refinitiv/Real-Time-SDK/blob/master/Java/Ema/Core/src/main/java/com/refinitiv/ema/access/OmmConsumer.java) in the EMA SDK.
 
-```
+```java
 @EventListener
 public void onApplicationEvent(ContextRefreshedEvent event) {
 	LOG.info("Initialize the consumer and connect to market data system....");
@@ -45,14 +45,14 @@ public void onApplicationEvent(ContextRefreshedEvent event) {
 ```
 
 The *Consumer* class creates the *EMA OMMConsumer*, using the configuration parameters defined in the application properties file. EMA SDK will try to connect to market data system, upon creation of *OMMConsumer* object automatically.
-```
+```java
 consumer  = EmaFactory.createOmmConsumer(EmaFactory.createOmmConsumerConfig()
 	.host(hostName + ":" + port)
 	.username(userName));
 ```
 
 The configuration parameters which are defined in the *application.properties* file and can also be over-ridden from the command line, are auto-injected into our application, since consumer is annotated with *@Service* tag:
-```
+```java
 @Value("${MarketData.ServiceName}") 
 private String serviceName;
 ```
@@ -60,7 +60,7 @@ private String serviceName;
 #### Web request
 I decided to use the [http://service_host:port/**quotes/item1,item2,...**]() format as the web service endpoint. This was achieved by annotating *@GetMapping("/quotes/{items}")* on the *getQuote* method on the *MDController*. 
 
-```
+```java
 @GetMapping("/quotes/{items}")
 @ResponseBody
 public InstrumentData[] getQuote(@PathVariable String[] items) throws Exception {
@@ -81,7 +81,7 @@ The list of requested instrument symbols are available in the *items[]* array th
 
 Here is what the complete *synchronousRequest()* method of consumer looks like:
 
-```
+```java
 public void synchronousRequest(Batch bRequest) throws Exception	{
 	ElementList eList = EmaFactory.createElementList();
 	OmmArray array = EmaFactory.createOmmArray();
@@ -114,7 +114,7 @@ Optionally, if the application is configured to limit the number of fields, in t
 The data and or status messages for instruments is delivered asynchronously - to the callback object provided when registering for those events. In this application it is *AppClient* object. The *onRefreshMsg* and *onStatusMsg* messages are invoked when the data for an instrument is received. These methods decode the received pricing data and populate the instrument object and also *countDown()* the latch. When all the instruments have been counted down - the previously blocked thread, waiting on *await()* is released. 
 
 *AppClient Object*:
-```
+```java
 public void onRefreshMsg(RefreshMsg refreshMsg, OmmConsumerEvent event)	{
 	...
 	if(DataType.DataTypes.FIELD_LIST == refreshMsg.payload().dataType())
@@ -128,7 +128,7 @@ public void onRefreshMsg(RefreshMsg refreshMsg, OmmConsumerEvent event)	{
 #### JSON web response
 The returned list of instruments, which either contain the pricing data or a status message, is automatically converted to JSON array response by spring framework, due to the *@ResponseBody* annotation. 
 
-```
+```java
 ommCons.synchronousRequest(btc);
 // send json array response
 return btc.getAllInstruments();
@@ -138,7 +138,7 @@ return btc.getAllInstruments();
 The application code shown above has been quite generic and can be used for local build and testing, using variety of build tools. The exact tools used to compile and package the application will depend on the final runtime environment of the application. I intended this application to be linearly scalable and load balanced, which is why AWS [Elastic Container Service](https://aws.amazon.com/ecs/) (ECS) seemed to be a good fit. A user may use [Kubernetes](https://kubernetes.io/) and achieve similar deployment using in-house, or AWS EC2 cloud or a hybrid solution. Since both [Spring:Boot](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot) and [RTSDK](https://mvnrepository.com/artifact/com.refinitiv.ema/ema) are available in the Maven Repository, this seemed to be an optimal solution. An article on [How to setup RTSDK project with Maven](https://developers.refinitiv.com/en/article-catalog/article/how-to-set-up-refinitiv-real-time-sdk-java-application-with-mave) provides a quick start on the required configuration. 
 
 This is the *pom.xml* dependencies for this application:
-```
+```xml
 <dependencies>
 	<dependency>
 		<groupId>org.springframework.boot</groupId>
@@ -158,7 +158,7 @@ This is the *pom.xml* dependencies for this application:
 ```
 The *rtsdk.version* is defined as a property, which at the time of this article is the latest version of 3.6.5.0. Spring boot maven plugin already repackages the compiled files, so no other custom assembly plugin is required:
 
-```
+```xml
 <build>
 	<plugins>
 		<plugin>
@@ -185,7 +185,7 @@ java -jar target\MDWebService-0.0.1-SNAPSHOT.jar
 ### Test
 
 Upon startup the spring application will also connect to the Refinitiv market data system. These details are configured in the *application.properties* file and packaged into the jar file which is available to the application at the run time. 
-```
+```properties
 # Spring web port
 server.port=8080
 
