@@ -1,5 +1,5 @@
 # How to build a scalable web service for stock prices
-Web services or Remote Procedure Call (RPC) are often used to provide data to internal pricing systems, which need to have a standardized means to get data, but not deal with the complications of working with market data systems. This requirement usually stems from the need to have a uniform access to multiple services - which might be internal databases, messaging services and reporting systems - all of which might typically provide data through a web service. In such a scenario, it is desirable that the stock prices (a.k.a market data), be also available through a web service. Providing pricing data as a web service, moves the programming complication away from the consumer application into the service itself. Web services also make it easier to integrate the market data application with standardized tools 3rd party like *PowerApps, BusinessWorks, Tableau, Postman etc*.
+Web services or Remote Procedure Call (RPC) are often used to provide data to internal pricing systems, which need to have a standardized means to get data, but not deal with the complications of working with financial market data systems. This requirement usually stems from the need to have a uniform access to multiple services - which might be internal databases, messaging services and reporting systems - all of which might typically provide data through a web service. In such a scenario, it is desirable that the stock prices (a.k.a market data), be also available through a web service. Providing pricing data as a web service, moves the programming complication away from the consumer application into the service itself. Web services also make it easier to integrate the market data application with standardized tools 3rd party like *PowerApps, BusinessWorks, Tableau, Postman etc*.
 
 ![Basic Setup](pics/WebService.png)
 
@@ -29,14 +29,14 @@ The complete application can be packaged up in a Docker container and deployed t
 
 ![Deployed Setup](pics/Deployed.png)
 
-The Spring creates a server, defines the service endpoints and manages the multi-threaded incoming requests. It also initializes the realtime SDK which establishes the network connection with backend pricing data provider. The application is written to makes a synchronous-snapshot request for pricing data, for the list of instruments in the web request. Let us examine the code snippets which perform these actions. Complete code is available in the linked GitHub repo. Here is the high level flowchart of application code:
+The Spring creates a server, defines the service endpoints and manages the multi-threaded incoming requests. It also initializes the realtime SDK which establishes the network connection with backend pricing data provider. The application is written to makes a synchronous-snapshot request for pricing data, for the list of financial instruments in the web request. This financial instruments list contains the stock identifiers - for e.g. *General Electric* on *NY Stock Exchange* is called GE.N, etc. Let us examine the code snippets which perform these actions. Complete code is available in the linked GitHub repo. Here is the high level flowchart of application code:
 
 ![Flowchart](pics/flowchart.png)
 
 #### Initialize the web service and market data connection
-In this code in the MarketData controller, we attach the *@EventListener* annotation which tells spring to invoke this method, when the web subsystem is ready. We in turn invoke the *initialize()* method on the OMM consumer. 
+In this code in the [MarketData controller](https://github.com/Refinitiv-API-Samples/Article.RTSDK.Java.MDWebService/blob/main/MDWebService/src/main/java/com/refinitiv/MDWebService/MDController.java), we attach the *@EventListener* annotation which tells spring to invoke this method, when the web subsystem is ready. We in turn invoke the *initialize()* method on the pricing data consumer. This pricing data consumer is the [OMM Consumer](https://github.com/Refinitiv/Real-Time-SDK/blob/master/Java/Ema/Core/src/main/java/com/refinitiv/ema/access/OmmConsumer.java) in the EMA SDK.
 
-```Java
+```
 @EventListener
 public void onApplicationEvent(ContextRefreshedEvent event) {
 	LOG.info("Initialize the consumer and connect to market data system....");
@@ -45,14 +45,14 @@ public void onApplicationEvent(ContextRefreshedEvent event) {
 ```
 
 The *Consumer* class creates the *EMA OMMConsumer*, using the configuration parameters defined in the application properties file. EMA SDK will try to connect to market data system, upon creation of *OMMConsumer* object automatically.
-```Java
+```
 consumer  = EmaFactory.createOmmConsumer(EmaFactory.createOmmConsumerConfig()
 	.host(hostName + ":" + port)
 	.username(userName));
 ```
 
 The configuration parameters which are defined in the *application.properties* file and can also be over-ridden from the command line, are auto-injected into our application, since consumer is annotated with *@Service* tag:
-```Java
+```
 @Value("${MarketData.ServiceName}") 
 private String serviceName;
 ```
@@ -60,7 +60,7 @@ private String serviceName;
 #### Web request
 I decided to use the [http://service_host:port/**quotes/item1,item2,...**]() format as the web service endpoint. This was achieved by annotating *@GetMapping("/quotes/{items}")* on the *getQuote* method on the *MDController*. 
 
-```Java
+```
 @GetMapping("/quotes/{items}")
 @ResponseBody
 public InstrumentData[] getQuote(@PathVariable String[] items) throws Exception {
@@ -81,7 +81,7 @@ The list of requested instrument symbols are available in the *items[]* array th
 
 Here is what the complete *synchronousRequest()* method of consumer looks like:
 
-```Java
+```
 public void synchronousRequest(Batch bRequest) throws Exception	{
 	ElementList eList = EmaFactory.createElementList();
 	OmmArray array = EmaFactory.createOmmArray();
@@ -106,13 +106,13 @@ public void synchronousRequest(Batch bRequest) throws Exception	{
 
 ```
 
-An OMM *ElementList* is created, and the RIC (instrument identifier) for all the requested instruments is added to it. Optionally, if the application is configured to limit the number of fields, in the configuration property *@Value("${MarketData.ApplyView}")*, the view FIDS (field identifiers) are also added to this element list. The resulting element list is registered with OMMConsumer using *registerClient()* method. The register client method will return immediately - after sending this request to market data system - without waiting for the price data to be received. To block this thread, the *await()* method on *CountDownLatch* is invoked. 
+An OMM *ElementList* object is created, and the RIC (instrument identifier) for all the requested instruments is added to it. This is what an Element List looks like:	*ElementList: { Batch : [IBM.N, GE.N, AAPL.O, MSFT.O....], View: [3, 5, 6, 11, 21, 22...] }*. Optionally, if the application is configured to limit the number of fields, in the configuration property *@Value("${MarketData.ApplyView}")*, the view FIDS (field identifiers) are also added to this element list. The resulting element list is registered with OMMConsumer using *registerClient()* method. The register client method will return immediately - after sending this request to market data system - without waiting for the price data to be received. To block this thread, the *await()* method on *CountDownLatch* is invoked. 
 
 #### Payload decoding and timeout
 The data and or status messages for instruments is delivered asynchronously - to the callback object provided when registering for those events. In this application it is *AppClient* object. The *onRefreshMsg* and *onStatusMsg* messages are invoked when the data for an instrument is received. These methods decode the received pricing data and populate the instrument object and also *countDown()* the latch. When all the instruments have been counted down - the previously blocked thread, waiting on *await()* is released. 
 
 *AppClient Object*:
-```Java
+```
 public void onRefreshMsg(RefreshMsg refreshMsg, OmmConsumerEvent event)	{
 	...
 	if(DataType.DataTypes.FIELD_LIST == refreshMsg.payload().dataType())
@@ -126,7 +126,7 @@ public void onRefreshMsg(RefreshMsg refreshMsg, OmmConsumerEvent event)	{
 #### JSON web response
 The returned list of instruments, which either contain the pricing data or a status message, is automatically converted to JSON array response by spring framework, due to the *@ResponseBody* annotation. 
 
-```Java
+```
 ommCons.synchronousRequest(btc);
 // send json array response
 return btc.getAllInstruments();
@@ -136,7 +136,7 @@ return btc.getAllInstruments();
 The application code shown above has been quite generic and can be used for local build and testing, using variety of build tools. The exact tools used to compile and package the application will depend on the final runtime environment of the application. I intended this application to be linearly scalable and load balanced, which is why AWS [Elastic Container Service](https://aws.amazon.com/ecs/) (ECS) seemed to be a good fit. A user may use [Kubernetes](https://kubernetes.io/) and achieve similar deployment using in-house, or AWS EC2 cloud or a hybrid solution. Since both [Spring:Boot](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot) and [RTSDK](https://mvnrepository.com/artifact/com.refinitiv.ema/ema) are available in the Maven Repository, this seemed to be an optimal solution. An article on [How to setup RTSDK project with Maven](https://developers.refinitiv.com/en/article-catalog/article/how-to-set-up-refinitiv-real-time-sdk-java-application-with-mave) provides a quick start on the required configuration. 
 
 This is the *pom.xml* dependencies for this application:
-```XML
+```
 <dependencies>
 	<dependency>
 		<groupId>org.springframework.boot</groupId>
@@ -156,7 +156,7 @@ This is the *pom.xml* dependencies for this application:
 ```
 The *rtsdk.version* is defined as a property, which at the time of this article is the latest version of 3.6.5.0. Spring boot maven plugin already repackages the compiled files, so no other custom assembly plugin is required:
 
-```XML
+```
 <build>
 	<plugins>
 		<plugin>
@@ -220,7 +220,7 @@ Once the application is running and successfully connected to the market data sy
 ![Test in Browser](pics/QuotesRequest.png)
 
 ### Package:
-Now that the application has been successfully coded and tested on our local dev environment, it should be deployed. A popular approach for managing cloud applications is to use docker containers. I create a bare-bones docker image using *openjdk-11* as the base image, and layer it up with the previously created jar file. This container is without a shell and runs our application upon launch. To read more about how to create docker images with Refinitiv Realtime API, see [this article](https://developers.refinitiv.com/en/article-catalog/article/how-to-deploy-and-run-real-time-java-application-with-maven-in-d).
+Now that the application has been successfully coded and tested on our local dev environment, it should be deployed. A popular approach for managing cloud applications is to use docker containers. I create a bare-bones docker image using *openjdk-11* as the base image, and layer it up with the previously created jar file. This container is without a shell and runs our application upon launch. To read more about how to create docker images with Refinitiv Realtime API, see [this article](https://developers.refinitiv.com/en/article-catalog/article/how-to-deploy-and-run-real-time-java-application-with-maven-in-d). A [Dockerfile](https://docs.docker.com/engine/reference/builder/) is used to build a base image.
 
 Dockerfile:
 ```
