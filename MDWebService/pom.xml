@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.6.7</version>
+		<version>2.7.18</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	
@@ -19,7 +19,7 @@
 	<properties>
 		<java.version>11</java.version>
 		<maven.test.skip>true</maven.test.skip>
-		<rtsdk.version>3.6.5.0</rtsdk.version>
+		<rtsdk.version>3.8.0.0</rtsdk.version>
 	</properties>
 	
 	<dependencies>
@@ -43,6 +43,11 @@
 			<artifactId>ema</artifactId>
 			<version>${rtsdk.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>me.paulschwarz</groupId>
+			<artifactId>spring-dotenv</artifactId>
+			<version>4.0.0</version>
+		  </dependency>
 	</dependencies>
 
 	<build>

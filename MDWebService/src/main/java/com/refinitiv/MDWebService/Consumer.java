@@ -67,6 +67,10 @@ class AppClient implements OmmConsumerClient	{
 public class Consumer 	{
 
 	// market data configuration values read from application.properties
+
+	@Value("${MarketData.ConnectionMode}")
+	private String connectionMode;
+
 	@Value("${MarketData.ServiceName}") 
 	private String serviceName;
 
@@ -85,6 +89,12 @@ public class Consumer 	{
 	@Value("${MarketData.View.FIDS}")
 	private int viewFIDS[];
 
+	@Value("${CLIENT_ID}")
+	private String client_id;
+
+	@Value("${CLIENT_SECRET}")
+	private String client_secret;
+
 	private OmmConsumer consumer = null;
 	private static final Logger LOG = LoggerFactory.getLogger(AppClient.class);
 
@@ -99,26 +109,44 @@ public class Consumer 	{
 
 	public void initialize()	{
 		// validate the market data properties
-		validateParameter(hostName);
-		validateParameter(serviceName);
-		validateParameter(userName);
+		if (connectionMode.equals("RTDS")){
+			validateParameter(hostName);
+			validateParameter(userName);
+		}
 		
-		if(port == 0)
-			throw new IllegalArgumentException("Market data ADS port cannot be 0");
+		validateParameter(serviceName);
 
+		//LOG.info("Hello, CLIENT_ID {}", client_id);
+		//LOG.info("Hello, CLIENT_SECRET {}", client_secret);
+		
+		if (connectionMode.equals("RTDS")){
+			if(port == 0){
+				throw new IllegalArgumentException("Market data Connection Mode RTDS, ADS port cannot be 0");
+			}
+		}
+			
 		if(applyView && viewFIDS.length == 0)
 			throw new IllegalArgumentException("Market data FIDS for VIEW not provided in configuration");
 
-		LOG.info("Starting OMMConsumer with following parameters: ");
-		LOG.info("ADS: {}:{}, Service: {}, DACS-User: {}, View: {}, View-FIDS: {}", hostName, port, serviceName, userName, applyView, java.util.Arrays.toString(viewFIDS));
-		
-		// initialize the OMM consumer
- 		consumer  = EmaFactory.createOmmConsumer(EmaFactory.createOmmConsumerConfig()
- 			.host(hostName + ":" + port)
- 			.username(userName));
+		if (connectionMode.equals("RTDS")){
+			LOG.info("Starting OMMConsumer with following parameters: ");
+			LOG.info("ADS: {}:{}, Service: {}, DACS-User: {}, View: {}, View-FIDS: {}", hostName, port, serviceName, userName, applyView, java.util.Arrays.toString(viewFIDS));
+
+			// initialize the OMM consumer to RTDS
+			consumer  = EmaFactory.createOmmConsumer(EmaFactory.createOmmConsumerConfig()
+			.host(hostName + ":" + port)
+			.username(userName));
+		} else if (connectionMode.equals("RTO")){
+			LOG.info("Starting OMMConsumer connecting to RTO with following parameters: ");
+			LOG.info("RTO: Service: {},  View: {}, View-FIDS: {}",  serviceName, applyView, java.util.Arrays.toString(viewFIDS));
+
+			// initialize the OMM consumer to RTO
+			consumer  = EmaFactory.createOmmConsumer(EmaFactory.createOmmConsumerConfig()
+			.consumerName("Consumer_RTO")
+			.clientId(client_id)
+			.clientSecret(client_secret));
+		}
 	}
-
-
 
 	public void synchronousRequest(Batch bRequest) throws Exception	{
 		ElementList eList = EmaFactory.createElementList();
