@@ -251,4 +251,56 @@ CMD ["java", "-jar", "./MDWebService-0.0.1-SNAPSHOT.jar"]
 
 I also add a ```.dockerignore``` file to not include some project files and directories into a container.
 
+## How to run MDWebService with RTO connection
+
+Firstly, set a ```application.properties``` file to connect to RTO as follows:
+
+```ini
+#Choose connection mode RTDS or RTO
+MarketData.ConnectionMode=RTO
+```
+
+Next, create a ```.env``` file with the Authentication Version 2 credential like the following format:
+
+```ini
+#Authentication V2
+CLIENT_ID=<Your Auth V2 Client-ID>
+CLIENT_SECRET=<Your Auth V2 Client-Secret>
+```
+
+Finally, set the prefer RTO endpoint region in the **Location** configuration node of the ```EmaConfig.xml``` file.
+
+```xml
+<ChannelGroup>
+ <ChannelList>
+  <Channel>
+   <Name value="Channel_RTO"/>
+   <ChannelType value="ChannelType::RSSL_ENCRYPTED"/>
+   <CompressionType value="CompressionType::None"/>
+   <GuaranteedOutputBuffers value="5000"/>
+   <!-- EMA discovers a host and a port from RDP service discovery for the specified location
+				 when both of them are not set and the session management is enable. -->
+   <Location value="ap-southeast"/>
+   <EnableSessionManagement value="1"/>
+   <ObjectName value=""/>
+  </Channel>
+ </ChannelList>
+</ChannelGroup>
+```
+
+### Run with Java Locally
+
+Once the development environment has Maven setup, use the following command to compile and package the file as a single executable jar file. (Note the use of Maven wrapper here):
+
+```bash
+mvnw clean package
+```
+Once the compilation is successful and a jar file has been created in the target directory, use either of the following commands to run the application locally:
+
+```bash
+mvnw spring-boot:run
+#or
+java -jar target\MDWebService-0.0.1-SNAPSHOT.jar
+```
+
 [tbd]
