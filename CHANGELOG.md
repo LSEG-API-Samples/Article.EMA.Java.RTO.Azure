@@ -40,6 +40,22 @@ Next, I also updated the version of RTSDK and [Spring Boot](https://spring.io/pr
  </properties>
 ```
 
+Lastly, I added a [dependency exclusions](https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html#dependency-exclusions) on the EMA's slf4j-jdk14 library to force the application to use Spring's default [Logback](https://logback.qos.ch/) library instead.
+
+```xml
+<dependency>
+  <groupId>com.refinitiv.ema</groupId>
+  <artifactId>ema</artifactId>
+  <version>${rtsdk.version}</version>
+  <exclusions>
+    <exclusion> 
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+    </exclusion>
+  </exclusions> 
+</dependency>
+```
+
 ### application.properties file
 
 To make the application supports both deployed RTDS and RTO, I have added the new ```MarketData.ConnectionMode``` configuration node to the ```application.properties``` file as follows:
@@ -199,7 +215,7 @@ To support both RTO and RTDS connection, the **Consumer_RTDS** consumer node and
 A Dockerfile has been updated to use [multi-stage build](https://docs.docker.com/guides/docker-concepts/building-images/multi-stage-builds) as follows:
 
 ```dockerfile
-FROM maven:3.9.6-eclipse-temurin-11-focal as builder
+FROM --platform=linux/amd64 maven:3.9.6-eclipse-temurin-11-focal as builder
 LABEL authors="Developer Relations"
 WORKDIR /app
 COPY pom.xml .
@@ -207,7 +223,8 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean -e -B package
 
-FROM openjdk:11-jre-slim-bullseye
+#FROM openjdk:11-jre-slim-bullseye
+FROM --platform=linux/amd64 eclipse-temurin:11-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/MDWebService-0.0.1-SNAPSHOT.jar .
 COPY EmaConfig.xml .
