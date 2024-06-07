@@ -9,7 +9,7 @@ ALL EXAMPLE CODE IS PROVIDED ON AN “AS IS” AND “AS AVAILABLE” BASIS FOR 
 
 ## Introduction
 
-This repository is forked from my colleague [How to build a scalable web service for stock prices](https://github.com/LSEG-API-Samples/Article.RTSDK.Java.MDWebService) with the following goals:
+Let’s start with purpose of this project repository. This repository is forked from my colleague [How to build a scalable web service for stock prices](https://github.com/LSEG-API-Samples/Article.RTSDK.Java.MDWebService) with the following goals:
 
 1. Update my colleague's Spring Boot MDWebService to support the Real-Time Optimized (RTO, not a **Wealth solution products**) with the Authentication Version 2 (aka Customer Identity and Access Management - CIAM, or *Service Account*).
 2. Use the RTO version MDWebService as a base application for deploying to [Azure Container Instances](https://azure.microsoft.com/en-us/products/container-instances).
@@ -46,7 +46,7 @@ Please see more detail on the [CHANGELOG.md](./CHANGELOG.md) file.
 
 ## How to run MDWebService with RTO connection
 
-Firstly, set a ```application.properties``` file to connect to RTO as follows:
+My next point is how to set up the project for the RTO connection. Firstly, set a ```application.properties``` file to connect to RTO as follows:
 
 ```ini
 #Choose connection mode RTDS or RTO
@@ -83,10 +83,12 @@ Finally, set the prefer RTO endpoint region in the **Location** configuration no
 
 ### Run with Java Locally
 
-Once the development environment has Maven setup, use the following command to compile and package the file as a single executable jar file. (Note the use of Maven wrapper here):
+Now let me move on to how to run the project locally for testing. Once the development environment has Maven setup, use the following command to compile and package the file as a single executable jar file. (Note the use of Maven wrapper here):
 
 ```bash
 mvnw clean package
+#or
+mvn clean package
 ```
 
 Once the compilation is successful and a jar file has been created in the target directory, use either of the following commands to run the application locally:
@@ -95,6 +97,8 @@ Once the compilation is successful and a jar file has been created in the target
 mvnw spring-boot:run
 #or
 java -jar target\MDWebService-0.0.1-SNAPSHOT.jar
+#or
+mvn spring-boot:run
 ```
 
 ![figure-1](pics/rto_service_up.png "connected to RTO")
@@ -109,9 +113,11 @@ Or you can run the HTTP request on the Postman.
 
 ![figure-3](pics/result_postman.png "Run result on Postman")
 
+That’s all I have to say about how to run the project locally.
+
 ### Run with Docker
 
-Firstly, build the container image by issuing the command (Dockerfile should be available in this *MDWebService*):
+So, now let’s look at how to run the project with Docker which is one of the main target of this project. Firstly, build the container image by issuing the command (Dockerfile should be available in this *MDWebService*):
 
 ```bash
 docker build -t mdwebservice-rto .
@@ -142,6 +148,8 @@ docker ps -a
 docker container stop <container_id>
 ```
 
+That’s all I have to say about how to run the project with Docker.
+
 ## How to run MDWebService with RTDS connection
 
 Firstly, set a ```application.properties``` file to connect to RTDS as follows:
@@ -165,7 +173,7 @@ Please see more detail on the [AZURE.md](./AZURE.md) file.
 
 ## Next Steps
 
-The step-by-step guide on this project just shows the easiest way to deploy and host your web application container on Azure cloud service as a test scenario. However, there more tasks to do if you need to deploy your production container like the following:
+That brings me to the end of this project. The step-by-step guide on this project just shows the easiest way to deploy and host your web application container on Azure cloud service as a test scenario. However, there more tasks to do if you need to deploy your production container like the following:
 
 - Adding the SSL to your deployment for enabling the secure HTTPS connection
 - Set up the load balancer and availability zone to handle more consumers traffics and for resiliency.

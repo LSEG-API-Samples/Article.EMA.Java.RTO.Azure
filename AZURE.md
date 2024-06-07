@@ -19,13 +19,13 @@ Azure provides various services for supporting different requirements,cost, and 
 
 ### Container Registry
 
-Azure also has the [Container Registry Service](https://azure.microsoft.com/en-us/products/container-registry) repository for storing and managing container images and artifacts with a fully managed environment within Azure. This repository requires the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/) tool to push/pull an application image to Azure container registry.
+So, I will start off with container registry. Azure also has the [Container Registry Service](https://azure.microsoft.com/en-us/products/container-registry) repository for storing and managing container images and artifacts with a fully managed environment within Azure. This repository requires the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/) tool to push/pull an application image to Azure container registry.
 
-However, the service also supports [Docker Hub registry](https://hub.docker.com/) repository, so I am choosing this way because I can set other Cloud Container solutions to pull image from Docker Hub as well.
+However, the service also supports [Docker Hub registry](https://hub.docker.com/) repository too, so I am choosing this way because I can set other Cloud Container solutions to pull image from Docker Hub as well.
 
 ### Push Image to Docker Hub
 
-The steps to push an MDWebService application image to Docker Hub repository are as follows.
+Turning to how to push an application image to Docker Hub. The steps to push an MDWebService application image to Docker Hub repository are as follows.
 
 Firstly, log in to [Docker Hub registry](https://hub.docker.com/) website, and select the **Create repository** button.
 
@@ -73,9 +73,11 @@ Please note that your image name is **&lt;your namespace&gt;/&lt;repository name
 
 You can find more detail about how to push an application image to Docker Hub on [Share the application](https://docs.docker.com/get-started/04_sharing_app/) document.
 
+That covers how to push image to Docker Hub.
+
 ### Creating Azure Container Instances
 
-Firstly, open a web browser to [Azure portal](https://azure.microsoft.com) website, then type *Container Instances* in a search bar. The Container Instance Service menu will be appeared, choose that menu.
+Now, what about how to pull an image from the container registry to Azure Container Instances Service. Firstly, open a web browser to [Azure portal](https://azure.microsoft.com) website, then type *Container Instances* in a search bar. The Container Instance Service menu will be appeared, choose that menu.
 
 ![figure-8](pics/azure_1.png "Choose Azure Instance Service")
 

@@ -9,6 +9,8 @@ ALL EXAMPLE CODE IS PROVIDED ON AN “AS IS” AND “AS AVAILABLE” BASIS FOR 
 
 ## What I have changed from the original project
 
+Let me start by explaining the updated that I have made to support the RTO connection.
+
 ### pom.xml file
 
 Firstly, I added [spring-dotenv](https://github.com/paulschwarz/spring-dotenv) dependencies to the project to load the RTO Authentication Version 2 credential from the Environment Variable or a ```.env``` file (see [configuration in the environment](https://12factor.net/config) for more detail).
@@ -56,9 +58,11 @@ Lastly, I added a [dependency exclusions](https://maven.apache.org/guides/introd
 </dependency>
 ```
 
+That covers the pom.xml file changed part.
+
 ### application.properties file
 
-To make the application supports both deployed RTDS and RTO, I have added the new ```MarketData.ConnectionMode``` configuration node to the ```application.properties``` file as follows:
+Turning to the application configuration file. I have added the new ```MarketData.ConnectionMode``` configuration node to the ```application.properties``` file as follows to make the application supports both RTO and deployed RTDS connections:
 
 ```ini
 #Choose connection mode RTDS or RTO
@@ -79,9 +83,11 @@ public class Consumer {
 }
 ```
 
+Let’s leave the ```application.properties``` file there.
+
 ### Consumer.java file
 
-The next step is change a ```Consumer.java``` to loaded RTO *Client ID* and *Client Secret* credential from the Environment Variables or a ```.env``` file.
+Now, what about application source code updated. The next step is change a ```Consumer.java``` to loaded RTO *Client ID* and *Client Secret* credential from the Environment Variables or a ```.env``` file.
 
 ```java
 @Service
@@ -130,9 +136,11 @@ CLIENT_ID=<Your Auth V2 Client-ID>
 CLIENT_SECRET=<Your Auth V2 Client-Secret>
 ```
 
+That’s all I have to say about the application source code changed.
+
 ### EmaConfig.xml file
 
-The easiest way to connect to RTO with the Service Discovery (dynamically gets RTO endpoints) is via the **Location** and **EnableSessionManagement** configurations of the newly added **EmaConfig.xml** file.
+That brings us to the new project's configuration file, the EmaConfig.xml file. It gives us the easiest way to connect to RTO with the Service Discovery (dynamically gets RTO endpoints) is via the **Location** and **EnableSessionManagement** configurations of the newly added **EmaConfig.xml** file.
 
 - The **Location** configuration specifies the cloud location of the RTO endpoint to which the RTSDK API establishes a connection.
 - The **EnableSessionManagement** configuration specifies whether the channel manages the authentication token (obtain and refresh) on behalf of the user.
@@ -175,7 +183,7 @@ The content in the EMA configuration file (**EmaConfig.xml**) looks like this:
 
 Note: The above example uses "ap-southeast" as an example RTO region.  You can optionally change this to test other endpoints within your region.  Please check with your LSEG representative. To retrieve a valid list of RTO endpoints based on your assigned tier and region, refer to the DNS Names within the Current Endpoints section outlined in the [Real-Time - Optimized Install and Config Guide](https://developers.lseg.com/en/api-catalog/refinitiv-real-time-opnsrc/rt-sdk-java/documentation#refinitiv-real-time-optimized-install-and-config-guide) document.
 
-To support both RTO and RTDS connection, the **Consumer_RTDS** consumer node and **Channel_RTDS** channel node have been added to the EmaConfig.xml file too.
+The **Consumer_RTDS** consumer node and **Channel_RTDS** channel node have been added to the EmaConfig.xml file for supporting both RTO and RTDS connections too.
 
 ```xml
 <ConsumerGroup>
@@ -212,7 +220,7 @@ To support both RTO and RTDS connection, the **Consumer_RTDS** consumer node and
 
 ### Dockerfile file
 
-A Dockerfile has been updated to use [multi-stage build](https://docs.docker.com/guides/docker-concepts/building-images/multi-stage-builds) as follows:
+Now, what about a Dockerfile? A Dockerfile has been updated to use [multi-stage build](https://docs.docker.com/guides/docker-concepts/building-images/multi-stage-builds) as follows:
 
 ```dockerfile
 FROM --platform=linux/amd64 maven:3.9.6-eclipse-temurin-11-focal as builder
@@ -234,3 +242,13 @@ CMD ["java", "-jar", "./MDWebService-0.0.1-SNAPSHOT.jar"]
 ```
 
 I also add a ```.dockerignore``` file to not include some project files and directories into a container.
+
+That covers all the changed I made on this project.
+
+## How to run MDWebService with RTO connection
+
+Please check the [README.md](./README.md) file.
+
+## How to deploy to Azure Cloud Service
+
+Please see more detail on the [AZURE.md](./AZURE.md) file.
