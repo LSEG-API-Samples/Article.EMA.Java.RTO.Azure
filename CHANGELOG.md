@@ -1,6 +1,6 @@
 # How to Deploy EMA RTO Application to Azure
 
-- Last Update: May 2024
+- Last Update: June 2024
 - Compiler: Java, Docker, and Maven
 - Prerequisite: RTO Authentication Version 2 credential
 

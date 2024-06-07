@@ -1,6 +1,6 @@
 # How to Deploy EMA RTO Application to Azure
 
-- Last Update: May 2024
+- Last Update: June 2024
 - Compiler: Java, Docker, and Maven
 - Prerequisite: RTO Authentication Version 2 credential
 
@@ -155,163 +155,17 @@ Next, follow the steps on the [original project](https://github.com/LSEG-API-Sam
 
 ## How to deploy to Azure Cloud Service
 
-Normally, there are various ways to deployed an application on the cloud service like create a Virtual Machine (VM) on the cloud, or use the Serverless or Platform as a Service (PaaS) to run application's source code on the cloud, or use the fully managed container orchestration service to run an application's container. It is based on your preference of manageability, business logic and cost to choose which way is suitable for you.
+Please see more detail on the [AZURE.md](./AZURE.md) file.
 
-The VM way is supported by all major Cloud services like the [Azure Virtual Machine](https://azure.microsoft.com/en-us/products/virtual-machines), [AWS EC2](https://aws.amazon.com/ec2/), and [Google Cloud Compute Engine](https://cloud.google.com/products/compute/). However, it requires a lot of manual work such as manage and set up the machine, install all application's dependencies, and run an application by yourself manually. This is the reason our article does not choose the VM way.
+![figure-6](pics/docker_push_5.png "docker push success")
 
-Since our MDWebService application already have been containerize, this article chooses the fully managed container orchestration service way.
+![figure-7](pics/azure_14.png "Container on Azure Instance Service")
 
-Azure provides various services for supporting different requirements,cost, and your application's preference. You can find more detail about the comparisons of all services that supports containerized applications on Azure on [Comparing Container Apps with other Azure container options](https://learn.microsoft.com/en-us/azure/container-apps/compare-options) and [Difference between Azure Container Instances and Azure Container Apps - serverfault](https://serverfault.com/questions/1083358/difference-between-azure-container-instances-and-azure-container-apps) websites. I am choosing the [Azure Container Instances service](https://azure.microsoft.com/en-us/products/container-instances) which is the easiest one.
-
-### Container Registry
-
-Azure also has the [Container Registry Service](https://azure.microsoft.com/en-us/products/container-registry) repository for storing and managing container images and artifacts with a fully managed environment within Azure. This repository requires the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/) tool to push/pull an application image to Azure container registry.
-
-However, the service also supports [Docker Hub registry](https://hub.docker.com/) repository, so I am choosing this way because I can set other Cloud Container solutions to pull image from Docker Hub as well.
-
-### Push Image to Docker Hub
-
-The steps to push an MDWebService application image to Docker Hub repository are as follows.
-
-Firstly, log in to [Docker Hub registry](https://hub.docker.com/) website, and select the **Create repository** button.
-
-![figure-6](pics/docker_hub_1.png)
-
-Next, input **Repository Name** as *mdwebservice-rto*, input a short description of your image, and choose **Public Visibility**. And then click the **Create** button.
-
-![figure-7](pics/docker_hub_2.png)
-
-Once the repository is created successfully, the page redirects you to your repository page which contains commands to [push](https://docs.docker.com/reference/cli/docker/image/push/) your local image to this repository.
-
-![figure-8](pics/docker_hub_3.png)
-
-Moving on to the next step to push image, open a command prompt and run the following command to log in to Docker Hub via the CLI.
-
-```bash
-docker login -u YOUR-USER-NAME
-```
-
-![figure-9](pics/docker_push_1.png)
-
-Then input your Docker Hub account credential (*password* or *token*), then press the Enter button
-
-![figure-10](pics/docker_push_2.png)
-
-Once you have logged in to Docker Hub on the CLI, use the [docker tag]((https://docs.docker.com/reference/cli/docker/image/tag/)) command to give the *mdwebservice-rto* image a new name.
-
-```bash
-docker tag mdwebservice-rto wasinwrefinitiv/mdwebservice-rto
-```
-
-![figure-11](pics/docker_push_3.png)
-
-Once the image has been tagged, run the docker push command. Please note that if you don't specify a tagname part, Docker uses a tag called latest.
-
-```bash
-docker push wasinwrefinitiv/mdwebservice-rto
-```
-
-![figure-12](pics/docker_push_4.png)
-
-Then go back to Docker Hub website, the repository page shows your image detail. You can add the repository's category and overview based on your preference.
-
-Please note that your image name is **&lt;your namespace&gt;/&lt;repository name&gt;** (*wasinwrefinitiv/mdwebservice-rto* in my case).
-
-![figure-13](pics/docker_push_5.png)
-
-You can find more detail about how to push an application image to Docker Hub on [Share the application](https://docs.docker.com/get-started/04_sharing_app/) document.
-
-### Creating Azure Container Instances
-
-Firstly, open a web browser to [Azure portal](https://azure.microsoft.com) website, then type *Container Instances* in a search bar. The Container Instance Service menu will be appeared, choose that menu.
-
-![alt text](pics/azure_1.png)
-
-The page redirects to the Container Instances resource management page. To create a container, you can click either the *+Create* button or *Create container instances* button.
-
-![alt text](pics/azure_2.png)
-
-You are now in the Container instances creation page. The first step is choosing your Azure subscription and create a new Resource group. I choose the *mdwebserivce-rto* name for the new Resource Group.
-
-![alt text](pics/azure_3.png)
-
-Next, input a container name. I choose *mdwebservice-rto* as my container name. Select your prefer region and numbers of [Availability zone](https://learn.microsoft.com/en-us/azure/reliability/reliability-containers).
-
-![alt text](pics/azure_4.png)
-
-Now we need to input the image detail as follows, and then click the *Next: Networking* button.
-
-- Image source: For [Docker Hub registry](https://hub.docker.com/), choose *Other registry*
-- Image type: Public
-- Image: Input your image name (**&lt;your namespace&gt;/&lt;repository name&gt;**)
-- Leave other options as is.
-
-![alt text](pics/azure_5.png)
-
-That brings us to the network creation page. Set the DNS named label to *mdwebservice-rto* and add the following ports with type **TCP** to our instance:
-
-- 8080 (for our Web Server)
-- 443 (for connecting to RDP API)
-- 14002 (for the RSSL connection)
-
-![alt text](pics/azure_6.png)
-
-And click the *Next: Advanced* button.
-
-Moving on to advanced page. We can set a container's Environment Variables here. Please choose *Mark as secure* as *Yes* and input the following keys and values
-
-- CLIENT_ID: Your Authentication V2 Client ID
-- ClIENT_SECRET: Your Authentication V2 Client Secret
-
-And click the *Next: Tags* button.
-
-![alt text](pics/azure_7.png)
-
-Next, choose your prefer tag names and values, then click the *Next: Review + create* button.
-
-Now we come to the final step. You can review your setting here and go back for changing any properties you need. If set up looks fine, click the *Create* button.
-
-![alt text](pics/azure_9.png)
-
-Then the Azure Container Instances service deploys your image.
-
-![alt text](pics/azure_10.png)
-
-Once deployment is completed. You can click the *Go to resource* button to check your newly deployed container.
-
-![alt text](pics/azure_11a.png)
-
-That brings us to the mdwebservice-rto instance resource page. The overview page contains the statistic of resource usages, container status, and the Public IP Address and container's automatically assigned DNS name. Please note that you can start, stop, and delete the instance from this resource page too.
-
-![alt text](pics/azure_12.png)
-
-You can click on the Settings --> container tab --> Log to check the application's console log messages.
-
-![alt text](pics/azure_13.png)
-
-To test the deployed web server instant, copy the DNS url from the *FQDN* property (in the red circle), and open it on your web browser as *http://&lt;FQDN name&gt;:port/quotes/RIC_Code* URL.
-
-![alt text](pics/azure_14.png)
-
-Please note that with the autogenerated domain name, *the URL might be blocked by corporate firewall or network policy*. I am testing and capturing the image from my personal machine.
-
-![alt text](pics/azure_15.png)
-
-That’s all I have to say about how to deploy a web service container to Azure.
-
-## Clean Up
-
-My next point is how to clean up the resources if you do not need to run an instance anymore (for cost saving too!).
-
-On the Container Instance Resources page, you can restart, stop, or delete an instance from the menu on this page.
-
-![alt text](pics/azure_16.png)
-
-That covers overall steps of deploying EMA instance on the Azure Container Instance service.
+![figure-8](pics/azure_15.png "MDWebService-RTO on the web browser")
 
 ## Next Steps
 
-The step-by-step guide above just shows the easiest way to deploy and host your web application container on Azure cloud service as a test scenario. However, there more tasks to do if you need to deploy your production container like the following:
+The step-by-step guide on this project just shows the easiest way to deploy and host your web application container on Azure cloud service as a test scenario. However, there more tasks to do if you need to deploy your production container like the following:
 
 - Adding the SSL to your deployment for enabling the secure HTTPS connection
 - Set up the load balancer and availability zone to handle more consumers traffics and for resiliency.
