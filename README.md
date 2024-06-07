@@ -165,7 +165,7 @@ Azure provides various services for supporting different requirements,cost, and 
 
 ### Container Registry
 
-Azure also has the [Container Registry Service](https://azure.microsoft.com/en-us/products/container-registry) repository for storing and managing container images and artifacts with a fully managed environment within Azure. This repository requires the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/) tool to push/pull an application image to Azure container registry. 
+Azure also has the [Container Registry Service](https://azure.microsoft.com/en-us/products/container-registry) repository for storing and managing container images and artifacts with a fully managed environment within Azure. This repository requires the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/) tool to push/pull an application image to Azure container registry.
 
 However, the service also supports [Docker Hub registry](https://hub.docker.com/) repository, so I am choosing this way because I can set other Cloud Container solutions to pull image from Docker Hub as well.
 
@@ -213,7 +213,7 @@ docker push wasinwrefinitiv/mdwebservice-rto
 
 ![figure-12](pics/docker_push_4.png)
 
-Then go back to Docker Hub website, the repository page shows your image detail. You can add the repository's category and overview based on your preference. 
+Then go back to Docker Hub website, the repository page shows your image detail. You can add the repository's category and overview based on your preference.
 
 Please note that your image name is **&lt;your namespace&gt;/&lt;repository name&gt;** (*wasinwrefinitiv/mdwebservice-rto* in my case).
 
@@ -311,15 +311,57 @@ That covers overall steps of deploying EMA instance on the Azure Container Insta
 
 ## Next Steps
 
-Add SSL.
+The step-by-step guide above just shows the easiest way to deploy and host your web application container on Azure cloud service as a test scenario. However, there more tasks to do if you need to deploy your production container like the following:
 
-[tbd]
+- Adding the SSL to your deployment for enabling the secure HTTPS connection
+- Set up the load balancer and availability zone to handle more consumers traffics and for resiliency.
+- Define CI/CD process for the next deployment.
+- And much more.
+
+About adding the SSL to Azure Container Instance App, there are various way to add SSL to Container Instances such as, [Enable automatic HTTPS with Caddy in a sidecar container](https://learn.microsoft.com/en-us/azure/container-instances/container-instances-container-group-automatic-ssl), [Enable a TLS endpoint in a sidecar container](https://learn.microsoft.com/en-us/azure/container-instances/container-instances-container-group-ssl).
+
+There are also other Azure Container services like [Azure App Service](https://azure.microsoft.com/en-in/products/app-service) or [Azure Container Apps](https://azure.microsoft.com/en-us/products/container-apps) that supports automatic scalability, more advanced network control/configurations, easy to connect to other Azure services, and built-in SSL supported. They are the service that I will be explored with our LSEG APIs in the future.
+
+To learn more about the Azure App Services and Container Apps, please check the following resources:
+
+- [Quickstart: Run a custom container in Azure App Services](https://learn.microsoft.com/en-us/azure/app-service/quickstart-custom-container?pivots=container-linux-azure-portal&tabs=dotnet)
+- [Azure Container Apps Overview](https://learn.microsoft.com/en-us/azure/container-apps/overview)
+- [Quickstart: Deploy your first container app using the Azure portal](https://learn.microsoft.com/en-us/azure/container-apps/quickstart-portal)
+- [Azure App Service vs Azure Container Apps - which to use?](https://learn.microsoft.com/en-us/answers/questions/1337789/azure-app-service-vs-azure-container-apps-which-to)
+
+Meanwhile, the open-source nature of the RTSDK makes the SDK easy to deploy on the Cloud Service. With the EMA API, you can create a Real-Time application with ease-of-use interfaces and easy to integrate with other services.
+
+For more detail about the Real-Time SDKs, please check the following resources:
+
+- [RTSDK C/C++ edition](https://developers.lseg.com/en/api-catalog/refinitiv-real-time-opnsrc/rt-sdk-cc)
+- [RTSDK C# edition](https://developers.lseg.com/en/api-catalog/refinitiv-real-time-opnsrc/refinitiv-real-time-csharp-sdk)
+- [RTSDK Java edition](https://developers.lseg.com/en/api-catalog/refinitiv-real-time-opnsrc/rt-sdk-java)
+
+## Special Thank
+
+Kudos to [Gurpreet Bal](https://github.com/ardyesp) for the original version of the [MDWebService source code](https://github.com/LSEG-API-Samples/Article.RTSDK.Java.MDWebService) and articles.
 
 ## Reference
 
+For further details, please check out the following resources:
+
+- [Real-Time SDK Java page](https://developers.lseg.com/en/api-catalog/refinitiv-real-time-opnsrc/rt-sdk-java) on the [LSEG Developer Community](https://developers.lseg.com/) website.
+- [The Real-Time SDK Family](https://developers.lseg.com/en/use-cases-catalog/refinitiv-real-time) page.
+- [Enterprise Message API Java Quick Start](https://developers.lseg.com/en/api-catalog/refinitiv-real-time-opnsrc/rt-sdk-java/quick-start)
+- [Developer Webinar: Introduction to Enterprise App Creation With Open-Source Enterprise Message API](https://www.youtube.com/watch?v=2pyhYmgHxlU)
+- [Developer Article: 10 important things you need to know before you write an Enterprise Real Time application](https://developers.lseg.com/article/10-important-things-you-need-know-you-write-elektron-real-time-application)
 - [Comparing Container Apps with other Azure container options](https://learn.microsoft.com/en-us/azure/container-apps/compare-options) article.
+* [Changes to Customer Access and Identity Management: Refinitiv Real-Time - Optimized](https://developers.refinitiv.com/en/article-catalog/article/changes-to-customer-access-and-identity-management--refinitiv-re)
+- [How to build a scalable web service for stock prices](https://developers.lseg.com/en/article-catalog/article/scalable-web-service-for-stock) article.
+- [How to deploy a web service on AWS](https://developers.lseg.com/en/article-catalog/article/how-to-deply-a-web-service-on-aws) article.
+- [Azure Portal](https://azure.microsoft.com/en-us/)
+- [Microsoft Learn for Azure](https://learn.microsoft.com/en-us/training/azure/) website.
 - [Difference between Azure Container Instances and Azure Container Apps - serverfault](https://serverfault.com/questions/1083358/difference-between-azure-container-instances-and-azure-container-apps) post.
 - [Azure Container Instances Service](https://azure.microsoft.com/en-us/products/container-instances)
 - [Azure Container Instances documentation](https://learn.microsoft.com/en-us/azure/container-instances/)
+- [How to enable TLS for Hasura GraphQL Engine in an Azure Container Instance with Caddy](https://www.antstack.com/blog/how-to-enable-tls-for-hasura-graphql-engine-in-azure-caddy/) blog post.
+- [Adding SSL/TLS To Azure Container Instances](https://samkreter.medium.com/adding-ssl-tls-to-azure-container-instances-1e608a8f321c) blog post.
+- [Enable automatic HTTPS with Caddy in a sidecar container](https://learn.microsoft.com/en-us/azure/container-instances/container-instances-container-group-automatic-ssl) document.
+- [Enable a TLS endpoint in a sidecar container](https://learn.microsoft.com/en-us/azure/container-instances/container-instances-container-group-ssl) document.
 
-[tbd]
+For any question related to this article or the RTSDK page, please use the Developer Community [Q&A Forum](https://community.developers.refinitiv.com/).
