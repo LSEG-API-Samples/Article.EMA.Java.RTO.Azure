@@ -14,6 +14,8 @@ Let’s start with purpose of this project repository. This repository is forked
 1. Update my colleague's Spring Boot MDWebService to support the Real-Time Optimized (RTO, not a **Wealth solution products**) with the Authentication Version 2 (aka Customer Identity and Access Management - CIAM, or *Service Account*).
 2. Use the RTO version MDWebService as a base application for deploying to [Azure Container Instances](https://azure.microsoft.com/en-us/products/container-instances).
 
+![figure-1](pics/connection_diagram_azure.png "connection diagram")
+
 For more detail about the original project information, please check the following resources:
 
 - The original project [README file](https://github.com/LSEG-API-Samples/Article.RTSDK.Java.MDWebService/blob/main/README.md).
@@ -101,17 +103,17 @@ java -jar target\MDWebService-0.0.1-SNAPSHOT.jar
 mvn spring-boot:run
 ```
 
-![figure-1](pics/rto_service_up.png "connected to RTO")
+![figure-2](pics/rto_service_up.png "connected to RTO")
 
 The *ChannelUp* message from EMA informs the application that it has successfully connected to the RTO server on port 14002.
 
 Once the application is running and successfully connected to the market data system, navigating to the web URL of [http://server:port/quotes/JPY=,THB=,SGD=](http://server:port/quotes/JPY=,THB=,SGD=) should produce a JSON response like this:
 
-![figure-2](pics/result_mdwebservice.png "Run result on the web browsers")
+![figure-3](pics/result_mdwebservice.png "Run result on the web browsers")
 
 Or you can run the HTTP request on the Postman.
 
-![figure-3](pics/result_postman.png "Run result on Postman")
+![figure-4](pics/result_postman.png "Run result on Postman")
 
 That’s all I have to say about how to run the project locally.
 
@@ -129,7 +131,7 @@ This will compile the image for our container. The newly created image can be se
 
 This will compile the image for our container. The newly created image can be seen with the ```docker images``` command:
 
-![figure-4](pics/docker_images.png "docker build result")
+![figure-5](pics/docker_images.png "docker build result")
 
 Then created image can be run using the command:
 
@@ -139,7 +141,7 @@ docker run -it --rm -p 8080:8080 --env-file .env mdwebservice-rto
 
 Here, we have run the container to connect to RTO. The container also binds the port 8080 used by Tomcat on to our local machine. The application can be tested by navigating to the 8080 port as done previously.
 
-![figure-5](pics/run_docker.png "run docker result")
+![figure-6](pics/run_docker.png "run docker result")
 
 After successful test, stop the running container using the docker stop command:
 
@@ -165,11 +167,11 @@ Next, follow the steps on the [original project](https://github.com/LSEG-API-Sam
 
 Please see more detail on the [AZURE.md](./AZURE.md) file.
 
-![figure-6](pics/docker_push_5.png "docker push success")
+![figure-7](pics/docker_push_5.png "docker push success")
 
-![figure-7](pics/azure_14.png "Container on Azure Instance Service")
+![figure-8](pics/azure_14.png "Container on Azure Instance Service")
 
-![figure-8](pics/azure_15.png "MDWebService-RTO on the web browser")
+![figure-9](pics/azure_15.png "MDWebService-RTO on the web browser")
 
 ## Next Steps
 
