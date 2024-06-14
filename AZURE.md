@@ -19,7 +19,7 @@ Azure provides various services for supporting different requirements,cost, and 
 
 ![figure-0](pics/deployment_azure.png "deployment diagram")
 
-**Note**: This project is based on *May/June 2024* UX/UI version of the [Azure Web Portal](https://azure.microsoft.com/en-in/get-started/azure-portal) and [Docker Hub](https://hub.docker.com/). The UX and UI of those websites are subject to changed.
+**Note**: This project is based on *May/June 2024* UX/UI version of the [Azure Web Portal](https://azure.microsoft.com/en-in/get-started/azure-portal) and [Docker Hub](https://hub.docker.com/) websites. The UX and UI of those websites are subject to changed.
 
 ### Container Registry
 
