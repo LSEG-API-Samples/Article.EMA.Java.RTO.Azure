@@ -85,7 +85,7 @@ Finally, set the prefer RTO endpoint region in the **Location** configuration no
 
 ### Run with Java Locally
 
-Now let me move on to how to run the project locally for testing. Once the development environment has Maven setup, use the following command to compile and package the file as a single executable jar file. (Note the use of Maven wrapper here):
+Now let me move on to how to run the project locally for testing. Once the RTO configurations above have been setup, use the following command to compile and package the file as a single executable jar file. (Note the use of Maven wrapper here):
 
 ```bash
 mvnw clean package
@@ -119,7 +119,7 @@ That’s all I have to say about how to run the project locally.
 
 ### Run with Docker
 
-So, now let’s look at how to run the project with Docker which is one of the main target of this project. Firstly, build the container image by issuing the command (Dockerfile should be available in this *MDWebService*):
+So, now let’s look at how to run the project with Docker which is one of the main target of this project. Firstly, build the container image by issuing the command (a ```Dockerfile``` is available in the *MDWebService* folder):
 
 ```bash
 docker build -t mdwebservice-rto .
