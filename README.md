@@ -210,7 +210,7 @@ Kudos to [Gurpreet Bal](https://github.com/ardyesp) for the original version of 
 For further details, please check out the following resources:
 
 - [Real-Time SDK Java page](https://developers.lseg.com/en/api-catalog/real-time-opnsrc/rt-sdk-java) on the [LSEG Developer Community](https://developers.lseg.com/) website.
-- [The Real-Time SDK Family](hhttps://developers.lseg.com/en/use-cases-catalog/real-time) page.
+- [The Real-Time SDK Family](https://developers.lseg.com/en/use-cases-catalog/real-time) page.
 - [Enterprise Message API Java Quick Start](https://developers.lseg.com/en/api-catalog/real-time-opnsrc/rt-sdk-java/quick-start)
 - [Developer Webinar: Introduction to Enterprise App Creation With Open-Source Enterprise Message API](https://www.youtube.com/watch?v=2pyhYmgHxlU)
 - [Developer Article: 10 important things you need to know before you write an Enterprise Real Time application](https://developers.lseg.com/article/10-important-things-you-need-know-you-write-elektron-real-time-application)
