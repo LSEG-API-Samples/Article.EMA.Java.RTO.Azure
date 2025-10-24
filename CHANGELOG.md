@@ -1,6 +1,6 @@
 # How to Deploy EMA RTO Application to Azure
 
-- Last Update: June 2024
+- Last Update: October 2025
 - Compiler: Java, Docker, and Maven
 - Prerequisite: RTO Authentication Version 2 credential
 
@@ -27,18 +27,20 @@ The ```pom.xml``` file:
 
 Next, I also updated the version of RTSDK and [Spring Boot](https://spring.io/projects/spring-boot/) in the ```pom.xml``` file as follows:
 
+**Last Updated:** October 2025
+
 ```xml
 <parent>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-starter-parent</artifactId>
-  <version>2.7.18</version>
+  <version>3.5.7</version>
   <relativePath/> <!-- lookup parent from repository -->
  </parent>
 ...
 <properties>
   <java.version>11</java.version>
   <maven.test.skip>true</maven.test.skip>
-  <rtsdk.version>3.8.0.0</rtsdk.version>
+  <rtsdk.version>3.9.1.1</rtsdk.version>
  </properties>
 ```
 
@@ -136,6 +138,25 @@ CLIENT_ID=<Your Auth V2 Client-ID>
 CLIENT_SECRET=<Your Auth V2 Client-Secret>
 ```
 
+### MDController.java
+
+**Last Updated:** October 2025.
+
+I am adding the ```try catch``` on the ```onApplicationEvent``` callback method.
+
+```java
+@EventListener
+	public void onApplicationEvent(ContextRefreshedEvent event) {
+		try {
+			LOG.info("Initialize the consumer and connect to market data system....");
+			ommCons.initialize();
+		} catch (Exception e) {
+			LOG.error("Failed to initialize consumer: {}", e.getMessage(), e);
+			// You might want to set a flag or take other action to indicate initialization failure
+		}
+	}	
+```
+
 That’s all I have to say about the application source code changed.
 
 ### EmaConfig.xml file
@@ -181,7 +202,7 @@ The content in the EMA configuration file (**EmaConfig.xml**) looks like this:
 </ChannelGroup>
 ```
 
-Note: The above example uses "ap-southeast" as an example RTO region.  You can optionally change this to test other endpoints within your region.  Please check with your LSEG representative. To retrieve a valid list of RTO endpoints based on your assigned tier and region, refer to the DNS Names within the Current Endpoints section outlined in the [Real-Time - Optimized Install and Config Guide](https://developers.lseg.com/en/api-catalog/refinitiv-real-time-opnsrc/rt-sdk-java/documentation#refinitiv-real-time-optimized-install-and-config-guide) document.
+Note: The above example uses "ap-southeast" as an example RTO region.  You can optionally change this to test other endpoints within your region.  Please check with your LSEG representative. To retrieve a valid list of RTO endpoints based on your assigned tier and region, refer to the DNS Names within the Current Endpoints section outlined in the [Real-Time - Optimized Install and Config Guide](https://developers.lseg.com/en/api-catalog/real-time-opnsrc/rt-sdk-java/documentation#refinitiv-real-time-optimized-install-and-config-guide) document.
 
 The **Consumer_RTDS** consumer node and **Channel_RTDS** channel node have been added to the EmaConfig.xml file for supporting both RTO and RTDS connections too.
 

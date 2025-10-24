@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.18</version>
+		<version>3.5.7</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	
@@ -19,7 +19,7 @@
 	<properties>
 		<java.version>11</java.version>
 		<maven.test.skip>true</maven.test.skip>
-		<rtsdk.version>3.8.0.0</rtsdk.version>
+		<rtsdk.version>3.9.1.1</rtsdk.version>
 	</properties>
 	
 	<dependencies>
