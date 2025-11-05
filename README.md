@@ -36,7 +36,7 @@ This project requires the following dependencies software and libraries.
 2. [Apache Maven](https://maven.apache.org/) project management and comprehension tool.
 3. Internet connection.  
 4. Access to the Real-Time Optimized (**Not Wealth products**) with Authentication Version 2 (aka Customer Identity and Access Management - CIAM, or *Service Account*). The Service Account is Client ID and Client Secret.
-5. [Docker Desktop](https://www.docker.com/products/docker-desktop/) application.
+5. [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Podman](https://podman-desktop.io/) application.
 6. [Docker Hub](https://hub.docker.com/) repository account.
 7. [Microsoft Azure](https://azure.microsoft.com/en-us/) account.
 
@@ -117,9 +117,9 @@ Or you can run the HTTP request on the Postman.
 
 That’s all I have to say about how to run the project locally.
 
-### Run with Docker
+### Run with Docker/Podman
 
-So, now let’s look at how to run the project with Docker which is one of the main target of this project. Firstly, build the container image by issuing the command (a ```Dockerfile``` is available in the *MDWebService* folder):
+So, now let’s look at how to run the project with Docker/Podman which is one of the main target of this project. Firstly, build the container image by issuing the command (a ```Dockerfile``` is available in the *MDWebService* folder):
 
 ```bash
 docker build -t mdwebservice-rto .
