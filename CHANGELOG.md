@@ -1,8 +1,8 @@
 # How to Deploy EMA RTO Application to Azure
 
-- Last Update: October 2025
+- Last Update: Mar 2026
 - Compiler: Java, Docker, and Maven
-- Prerequisite: RTO Authentication Version 2 credential
+- Prerequisite: RTO Authentication Version 2 (or 1) credential
 
 Example Code Disclaimer:
 ALL EXAMPLE CODE IS PROVIDED ON AN “AS IS” AND “AS AVAILABLE” BASIS FOR ILLUSTRATIVE PURPOSES ONLY. REFINITIV MAKES NO REPRESENTATIONS OR WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, AS TO THE OPERATION OF THE EXAMPLE CODE, OR THE INFORMATION, CONTENT, OR MATERIALS USED IN CONNECTION WITH THE EXAMPLE CODE. YOU EXPRESSLY AGREE THAT YOUR USE OF THE EXAMPLE CODE IS AT YOUR SOLE RISK.
@@ -27,20 +27,22 @@ The ```pom.xml``` file:
 
 Next, I also updated the version of RTSDK and [Spring Boot](https://spring.io/projects/spring-boot/) in the ```pom.xml``` file as follows:
 
-**Last Updated:** October 2025
+**Last Updated:** Mar 2026
+
+Updated the versions of `spring-boot-starter-parent` and `rtsdk`.
 
 ```xml
 <parent>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-starter-parent</artifactId>
-  <version>3.5.7</version>
+  <version>3.5.12</version>
   <relativePath/> <!-- lookup parent from repository -->
  </parent>
 ...
 <properties>
   <java.version>11</java.version>
   <maven.test.skip>true</maven.test.skip>
-  <rtsdk.version>3.9.1.1</rtsdk.version>
+  <rtsdk.version>3.9.2.0</rtsdk.version>
  </properties>
 ```
 
@@ -60,6 +62,12 @@ Lastly, I added a [dependency exclusions](https://maven.apache.org/guides/introd
 </dependency>
 ```
 
+Finally, I have updated an application version to *1.0-snapshot*.
+
+```xml
+<version>1.0-SNAPSHOT</version>
+```
+
 That covers the pom.xml file changed part.
 
 ### application.properties file
@@ -70,6 +78,13 @@ Turning to the application configuration file. I have added the new ```MarketDat
 #Choose connection mode RTDS or RTO
 MarketData.ConnectionMode=RTO
 #MarketData.ConnectionMode=RTDS
+```
+
+The code needs to support the RTO with Authentication Version 1, so I am adding the following new property to the the ```application.properties``` file
+
+```ini
+#Choose RTO Authentication mode V1 (Machine-ID) or V2 (Service Account), only for MarketData.ConnectionMode=RTO
+MarketData.RTOAuthenMode=V2
 ```
 
 This new configuration also need a code changed on a ```Consumer.java``` file:
@@ -89,58 +104,98 @@ Let’s leave the ```application.properties``` file there.
 
 ### Consumer.java file
 
-Now, what about application source code updated. The next step is change a ```Consumer.java``` to loaded RTO *Client ID* and *Client Secret* credential from the Environment Variables or a ```.env``` file.
+Now, what about application source code updated. The next step is change a ```Consumer.java``` to load RTO   credential from the Environment Variables or a ```.env``` file.
+
+- For Version 2 Authentication, loads *Client ID* and *Client Secret*
+- For Version 1 Authentication, loads *Machine ID*, *Password*, and *App Key*
 
 ```java
 @Service
 public class Consumer {
  ...
- @Value("${CLIENT_ID}")
- private String client_id;
+  /** V2 Service Account client ID — required when connectionMode=RTO and rtoAuthenMode=V2 */
+	@Value("${CLIENT_ID}")
+	private String client_id;
 
- @Value("${CLIENT_SECRET}")
- private String client_secret;
+	/** V2 Service Account client secret — required when connectionMode=RTO and rtoAuthenMode=V2 */
+	@Value("${CLIENT_SECRET}")
+	private String client_secret;
+
+	/** V1 Machine-ID username — required when connectionMode=RTO and rtoAuthenMode=V1 */
+	@Value("${RTO_MACHINE_ID}")
+	private String rto_machine_id;
+
+	/** V1 Machine-ID password — required when connectionMode=RTO and rtoAuthenMode=V1 */
+	@Value("${RTO_PASSWORD}")
+	private String rto_password;
+
+	/** V1 application key — required when connectionMode=RTO and rtoAuthenMode=V1 */
+	@Value("${RTO_APPKEY}")
+	private String rto_appkey;
  ...
 }
 ```
 
-Then changed the code to initialize the ```OmmConsumer``` object based on a ```MarketData.ConnectionMode``` configuration.
+Then changed the code to 
+
+- Initialize the ```OmmConsumer``` object based on a ```MarketData.ConnectionMode``` configuration.
+- Create a share ```OmmConsumerConfig``` object to store each configuration above.
+- If ```MarketData.ConnectionMode``` is **RTO**, set a RTO credential based on ```MarketData.RTOAuthenMode``` configuration.
 
 ```java
+private OmmConsumerConfig config = null;
+
 public void initialize() {
- ...
- if (connectionMode.equals("RTDS")){
-   LOG.info("Starting OMMConsumer with following parameters: ");
-   ....
+    // ...
 
-   // initialize the OMM consumer to RTDS
-   consumer  = EmaFactory.createOmmConsumer(EmaFactory.createOmmConsumerConfig()
-   .host(hostName + ":" + port)
-   .username(userName));
-  } else if (connectionMode.equals("RTO")){
-   LOG.info("Starting OMMConsumer connecting to RTO with following parameters: ");
-   ...
+    // create a shared OmmConsumerConfig that will be customized below
+    config = EmaFactory.createOmmConsumerConfig();
 
-   // initialize the OMM consumer to RTO
-   consumer  = EmaFactory.createOmmConsumer(EmaFactory.createOmmConsumerConfig()
-   .consumerName("Consumer_RTO")
-   .clientId(client_id)
-   .clientSecret(client_secret));
-  }
- ...
+    if (connectionMode.equals("RTDS")) {
+        LOG.info("Starting OMMConsumer with following parameters: ");
+        // ...
+
+        // connect directly to the ADS using hostname/port and DACS username
+        consumer = EmaFactory.createOmmConsumer(config.host(hostName + ":" + port).username(userName));
+
+    } else if (connectionMode.equals("RTO")) {
+        LOG.info("Starting OMMConsumer connecting to RTO with following parameters: ");
+        // ...
+
+        // configure credentials based on the RTO authentication mode
+        if (rtoAuthenMode.equals("V1")) {
+            LOG.info("RTO Authentication Mode: V1 (Machine-ID)");
+            // V1 uses a personal Machine-ID, password, and application key
+            config.consumerName("Consumer_RTO").username(rto_machine_id).password(rto_password).clientId(rto_appkey);
+        } else if (rtoAuthenMode.equals("V2")) {
+            LOG.info("RTO Authentication Mode: V2 (Service Account)");
+            // V2 uses a service account client ID and secret (OAuth2 client credentials)
+            config.consumerName("Consumer_RTO").clientId(client_id).clientSecret(client_secret);
+        }
+
+        // connect to RTO using the configured credentials
+        consumer = EmaFactory.createOmmConsumer(config);
+    }
+    // ...
 }
 ```
 
-I am also added ```.env``` (.gitignore) and ```.env.example``` files for set the Authentication Version 2 locally as follows:
+I am also added ```.env``` (.gitignore) and ```.env.example``` files for set the RTO credential locally as follows:
 
 ```ini
+#Authentication V2
 CLIENT_ID=<Your Auth V2 Client-ID>
 CLIENT_SECRET=<Your Auth V2 Client-Secret>
+
+#Authentication V1
+RTO_MACHINE_ID=<Your Auth V1 Machine-ID>
+RTO_PASSWORD=<Your Auth V1 Password>
+RTO_APPKEY=<Your Auth V1 AppKey>
 ```
 
-### MDController.java
+That is all I have to say about the ```Consumer.java``` file.
 
-**Last Updated:** October 2025.
+### MDController.java
 
 I am adding the ```try catch``` on the ```onApplicationEvent``` callback method.
 

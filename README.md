@@ -1,8 +1,8 @@
 # How to Deploy EMA RTO Application to Azure
 
-- Last Update: October 2025
+- Last Update: Mar 202
 - Compiler: Java, Docker, and Maven
-- Prerequisite: RTO Authentication Version 2 credential
+- Prerequisite: RTO Authentication Version 2 (or 1) credential
 
 Example Code Disclaimer:
 ALL EXAMPLE CODE IS PROVIDED ON AN “AS IS” AND “AS AVAILABLE” BASIS FOR ILLUSTRATIVE PURPOSES ONLY. LSEG MAKES NO REPRESENTATIONS OR WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, AS TO THE OPERATION OF THE EXAMPLE CODE, OR THE INFORMATION, CONTENT, OR MATERIALS USED IN CONNECTION WITH THE EXAMPLE CODE. YOU EXPRESSLY AGREE THAT YOUR USE OF THE EXAMPLE CODE IS AT YOUR SOLE RISK.
@@ -35,7 +35,7 @@ This project requires the following dependencies software and libraries.
 1. Oracle 1.11 & 1.17 or OpenJDK 11.
 2. [Apache Maven](https://maven.apache.org/) project management and comprehension tool.
 3. Internet connection.  
-4. Access to the Real-Time Optimized (**Not Wealth products**) with Authentication Version 2 (aka Customer Identity and Access Management - CIAM, or *Service Account*). The Service Account is Client ID and Client Secret.
+4. Access to the Real-Time Optimized (**Not Wealth products**) with Authentication Version 2 (aka Customer Identity and Access Management - CIAM, or *Service Account*). The Service Account is Client ID and Client Secret and Version 1 (Machine-ID)
 5. [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Podman](https://podman-desktop.io/) application.
 6. [Docker Hub](https://hub.docker.com/) repository account.
 7. [Microsoft Azure](https://azure.microsoft.com/en-us/) account.
@@ -53,6 +53,12 @@ My next point is how to set up the project for the RTO connection. Firstly, set 
 ```ini
 #Choose connection mode RTDS or RTO
 MarketData.ConnectionMode=RTO
+MarketData.RTOAuthenMode=V2
+```
+
+Next, set a connection mode `V1` or `V2` in a ```application.properties``` file
+
+```ini
 ```
 
 Next, create a ```.env``` file in a ```MDWebService``` folder with the Authentication Version 2 credential like the following format:
@@ -61,6 +67,11 @@ Next, create a ```.env``` file in a ```MDWebService``` folder with the Authentic
 #Authentication V2
 CLIENT_ID=<Your Auth V2 Client-ID>
 CLIENT_SECRET=<Your Auth V2 Client-Secret>
+
+#Authentication V1
+RTO_MACHINE_ID=<Your Auth V1 Machine-ID>
+RTO_PASSWORD=<Your Auth V1 Password>
+RTO_APPKEY=<Your Auth V1 AppKey>
 ```
 
 Finally, set the prefer RTO endpoint region in the **Location** configuration node of the ```EmaConfig.xml``` file.
@@ -98,7 +109,7 @@ Once the compilation is successful and a jar file has been created in the target
 ```bash
 mvnw spring-boot:run
 #or
-java -jar target\MDWebService-0.0.1-SNAPSHOT.jar
+java -jar target\MDWebService-1.0-SNAPSHOT.jar
 #or
 mvn spring-boot:run
 ```
@@ -107,7 +118,7 @@ mvn spring-boot:run
 
 The *ChannelUp* message from EMA informs the application that it has successfully connected to the RTO server on port 14002.
 
-Once the application is running and successfully connected to the market data system, navigating to the web URL of [http://server:port/quotes/JPY=,THB=,SGD=](http://server:port/quotes/JPY=,THB=,SGD=) should produce a JSON response like this:
+Once the application is running and successfully connected to the market data system, navigating to the web URL of [http://server:port/quotes/JPY=,THB=,SGD=](http://server:port/quotes/JPY=,THB=,SGD=) (example `http://localhost:8080/quotes/JPY=,THB=,SGD=`) should produce a JSON response like this:
 
 ![figure-3](pics/result_mdwebservice.png "Run result on the web browsers")
 
