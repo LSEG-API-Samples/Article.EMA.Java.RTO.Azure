@@ -1,4 +1,4 @@
-# How to Deploy EMA RTO Application to Azure
+# How to Deploy EMA RTO Application to Azure -- Spring Boot Streaming Console 
 
 - Last Update: Mar 2026
 - Compiler: [Supported Java versions](https://developers.lseg.com/en/api-catalog/real-time-opnsrc/rt-sdk-java/documentation#api-compatibility-matrix), Docker, and Maven
