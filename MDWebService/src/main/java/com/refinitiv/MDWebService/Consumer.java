@@ -11,6 +11,9 @@ package com.refinitiv.MDWebService;
 import org.springframework.stereotype.*;
 import org.springframework.beans.factory.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.refinitiv.ema.access.*;
 import com.refinitiv.ema.access.DataType.DataTypes;
 import com.refinitiv.ema.access.OmmConsumerConfig.OperationModel;
@@ -28,10 +31,14 @@ import org.slf4j.*;
 class AppClient implements OmmConsumerClient {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AppClient.class);
+	// List to store EMA Batch items handles captured from Refresh responses, so they can be unregistered before the next batch request
+	private List<Long> handles = new ArrayList<>();
 
 	/** Called when the initial image (snapshot) arrives for a requested item. */
 	public void onRefreshMsg(RefreshMsg refreshMsg, OmmConsumerEvent event) {
 		try {
+			LOG.info("Refresh: " + refreshMsg);
+			handles.add(event.handle());
 			Batch bRequest = (Batch) event.closure();
 			InstrumentData instr = bRequest.getInstrument(refreshMsg.name());
 			instr.setState(refreshMsg.state());
@@ -54,6 +61,7 @@ class AppClient implements OmmConsumerClient {
 	public void onStatusMsg(StatusMsg statusMsg, OmmConsumerEvent event) {
 		if (statusMsg.hasName()) {
 			try {
+				LOG.info("Status: " + statusMsg);
 				Batch bRequest = (Batch) event.closure();
 				InstrumentData instr = bRequest.getInstrument(statusMsg.name());
 				instr.setState(statusMsg.state());
@@ -72,10 +80,23 @@ class AppClient implements OmmConsumerClient {
 	}
 
 	// Update, Generic, Ack, and AllMsg callbacks are not used in snapshot mode
-	public void onUpdateMsg(UpdateMsg updateMsg, OmmConsumerEvent event) {}
+	public void onUpdateMsg(UpdateMsg updateMsg, OmmConsumerEvent event) {
+		try{
+			LOG.info("Update: " + updateMsg);
+		} catch (Exception e) {
+			LOG.error("Exception processing Update callback");
+			LOG.error("Message: ", updateMsg);
+			LOG.error("Exception: ", e);
+		}
+	}
 	public void onGenericMsg(GenericMsg genericMsg, OmmConsumerEvent consumerEvent) {}
 	public void onAckMsg(AckMsg ackMsg, OmmConsumerEvent consumerEvent) {}
 	public void onAllMsg(Msg msg, OmmConsumerEvent consumerEvent) {}
+
+	/** Returns all EMA stream handles captured from Refresh responses. */
+	public List<Long> getHandles() {
+		return handles;
+	}
 }
 
 
@@ -117,6 +138,10 @@ public class Consumer {
 	@Value("${MarketData.DACSUsername}")
 	private String userName;
 
+	// --- Settings for Streaming or Snapshot mode, set in application.properties ---
+	@Value("${MarketData.Streaming}")
+	private boolean streaming;
+
 	// --- View / field filtering settings, set in application.properties ---
 
 	/** When true, requests only the field IDs listed in viewFIDS (reduces bandwidth) */
@@ -152,7 +177,9 @@ public class Consumer {
 	private OmmConsumer consumer = null;
 	private OmmConsumerConfig config = null;
 	private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);
+	private List<Long> handles = new ArrayList<>();
 
+	AppClient appClient =null;
 
 
 	/** Throws IllegalArgumentException if the given string is null or blank. */
@@ -177,6 +204,8 @@ public class Consumer {
 
 		// create a shared OmmConsumerConfig that will be customized below
 		config = EmaFactory.createOmmConsumerConfig();
+		// Initialize the AppClient callback handler (defined above) that will process responses for all requests
+		appClient = new AppClient();
 
 		if (connectionMode.equals("RTDS")) {
 			if (port == 0) {
@@ -189,13 +218,13 @@ public class Consumer {
 
 		if (connectionMode.equals("RTDS")) {
 			LOG.info("Starting OMMConsumer with following parameters: ");
-			LOG.info("ADS: {}:{}, Service: {}, DACS-User: {}, View: {}, View-FIDS: {}", hostName, port, serviceName, userName, applyView, java.util.Arrays.toString(viewFIDS));
+			LOG.info("ADS: {}:{}, Service: {}, DACS-User: {}, Streaming: {}, View: {},  View-FIDS: {}", hostName, port, serviceName, userName, streaming, applyView, java.util.Arrays.toString(viewFIDS));
 
 			// connect directly to the ADS using hostname/port and DACS username
 			consumer = EmaFactory.createOmmConsumer(config.host(hostName + ":" + port).username(userName));
 		} else if (connectionMode.equals("RTO")) {
 			LOG.info("Starting OMMConsumer connecting to RTO with following parameters: ");
-			LOG.info("RTO: Service: {},  View: {}, View-FIDS: {}", serviceName, applyView, java.util.Arrays.toString(viewFIDS));
+			LOG.info("RTO: Service: {}, Streaming: {}, View: {}, View-FIDS: {}", serviceName, streaming, applyView, java.util.Arrays.toString(viewFIDS));
 
 			// configure credentials based on the RTO authentication mode
 			if (rtoAuthenMode.equals("V1")) {
@@ -241,8 +270,17 @@ public class Consumer {
 			eList.add(EmaFactory.createElementEntry().array(EmaRdm.ENAME_VIEW_DATA, vArray));
 		}
 
+		// Get existing handles from AppClient and unregister them before making a new batch request, to avoid conflicts with previous requests
+		handles = appClient.getHandles();
+		// Unregister existing streams if any
+		if(handles != null && !handles.isEmpty()) {
+			for (long handle : handles) {
+				consumer.unregister(handle);
+			}
+			handles.clear();
+		}
 		// register the batch request; pass the Batch as closure so callbacks can resolve items
-		consumer.registerClient(EmaFactory.createReqMsg().serviceName(serviceName).payload(eList).interestAfterRefresh(false), new AppClient(), bRequest);
+		consumer.registerClient(EmaFactory.createReqMsg().serviceName(serviceName).payload(eList).interestAfterRefresh(streaming), appClient, bRequest);
 
 		// block until all items in the batch have been fulfilled (or timeout)
 		bRequest.await();
@@ -253,3 +291,4 @@ public class Consumer {
 		if (consumer != null)
 			consumer.uninitialize();
 	}
+}

@@ -1,11 +1,15 @@
 # How to Deploy EMA RTO Application to Azure
 
 - Last Update: Mar 2026
-- Compiler: Java, Docker, and Maven
+- Compiler: [Supported Java versions](https://developers.lseg.com/en/api-catalog/real-time-opnsrc/rt-sdk-java/documentation#api-compatibility-matrix), Docker, and Maven
 - Prerequisite: RTO Authentication Version 2 (or 1) credential
 
 Example Code Disclaimer:
 ALL EXAMPLE CODE IS PROVIDED ON AN “AS IS” AND “AS AVAILABLE” BASIS FOR ILLUSTRATIVE PURPOSES ONLY. LSEG MAKES NO REPRESENTATIONS OR WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, AS TO THE OPERATION OF THE EXAMPLE CODE, OR THE INFORMATION, CONTENT, OR MATERIALS USED IN CONNECTION WITH THE EXAMPLE CODE. YOU EXPRESSLY AGREE THAT YOUR USE OF THE EXAMPLE CODE IS AT YOUR SOLE RISK.
+
+## Streaming Version
+
+This is a temporary branch aims for demonstration only. It will not merge to a main branch. I will delete this branch once a demonstration is completed.
 
 ## Introduction
 
@@ -46,6 +50,15 @@ Please contact your LSEG representative to help you to access the RTO Service ac
 
 Please see more detail on the [CHANGELOG.md](./CHANGELOG.md) file.
 
+## How to run MDWebService with Streaming Connection
+
+An application requests snapshot data by default. Set a ```application.properties``` file to enable the Streaming data as follows:
+
+```ini
+# Whether to request snapshot data or Streaming
+MarketData.Streaming=true
+```
+
 ## How to run MDWebService with RTO connection
 
 My next point is how to set up the project for the RTO connection. Firstly, set a ```application.properties``` file to connect to RTO as follows:
@@ -54,11 +67,6 @@ My next point is how to set up the project for the RTO connection. Firstly, set 
 #Choose connection mode RTDS or RTO
 MarketData.ConnectionMode=RTO
 MarketData.RTOAuthenMode=V2
-```
-
-Next, set a connection mode `V1` or `V2` in a ```application.properties``` file
-
-```ini
 ```
 
 Next, create a ```.env``` file in a ```MDWebService``` folder with the Authentication Version 2 credential like the following format:
@@ -127,6 +135,20 @@ Or you can run the HTTP request on the Postman.
 ![figure-4](pics/result_postman.png "Run result on Postman")
 
 That’s all I have to say about how to run the project locally.
+
+With the streaming is true (`MarketData.Streaming=true`), the streaming refresh and update messages will be displayed via a console.
+
+Refresh:
+
+![refresh](pics/refresh_msg.png)
+
+Update:
+
+![update](pics/update_msg.png)
+
+Status:
+
+![status](pics/status_msg.png)
 
 ### Run with Docker/Podman
 
